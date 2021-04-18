@@ -391,6 +391,9 @@ impl<'a> CliApp<'a> {
 
   // spt playback -s
   pub async fn get_status(&mut self, format: String) -> Result<String> {
+    // Wait for spotify to update the playback
+    std::thread::sleep(std::time::Duration::from_millis(500));
+
     // Update info on current playback
     self
       .net
