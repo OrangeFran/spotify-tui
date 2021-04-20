@@ -82,6 +82,7 @@ pub enum Flag {
   // * User chooses like -> Flag::Like(true)
   // * User chooses dislike -> Flag::Like(false)
   Like(bool),
+  SaveAlbum(bool),
   Shuffle,
   Repeat,
 }
@@ -96,6 +97,12 @@ impl Flag {
       flags.push(Self::Like(true));
     } else if m.is_present("dislike") {
       flags.push(Self::Like(false));
+    }
+    // Only one of these two
+    if m.is_present("save-album") {
+      flags.push(Self::SaveAlbum(true));
+    } else if m.is_present("unsave-album") {
+      flags.push(Self::SaveAlbum(false));
     }
 
     if m.is_present("shuffle") {

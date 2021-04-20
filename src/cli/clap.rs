@@ -93,6 +93,16 @@ can be used together
         .help("Dislikes the current song if possible"),
     )
     .arg(
+        Arg::with_name("save-album")
+            .long("save-album")
+            .help("Saves the current album if possible")
+    )
+    .arg(
+        Arg::with_name("unsave-album")
+            .long("unsave-album")
+            .help("Unsaves the current album if possible")
+    )
+    .arg(
       Arg::with_name("shuffle")
         .long("shuffle")
         .help("Toggles shuffle mode"),
@@ -158,7 +168,7 @@ seconds backwards and `spt pb --seek 10` to the tenth second of the track.",
     )
     .group(
       ArgGroup::with_name("flags")
-        .args(&["like", "dislike", "shuffle", "repeat"])
+        .args(&["like", "dislike", "save-album", "unsave-album", "shuffle", "repeat"])
         .multiple(true)
         .conflicts_with_all(&["single", "jumps"]),
     )

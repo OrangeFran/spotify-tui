@@ -32,6 +32,28 @@ impl<'a> CliApp<'a> {
     self.net.app.lock().await.liked_song_ids_set.contains(id)
   }
 
+  async fn is_a_saved_album(&mut self, id: &str) -> bool {
+    // Update the liked_song_ids_set
+    self
+      .net
+      .handle_network_event(IoEvent::CurrentUserSavedAlbumsContains(
+        vec![id.to_string()],
+      ))
+      .await;
+    self.net.app.lock().await.saved_album_ids_set.contains(id)
+  }
+
+  async fn is_a_saved_show(&mut self, id: &str) -> bool {
+    // Update the liked_song_ids_set
+    self
+      .net
+      .handle_network_event(IoEvent::CurrentUserSavedShowsContains(
+        vec![id.to_string()],
+      ))
+      .await;
+    self.net.app.lock().await.saved_show_ids_set.contains(id)
+  }
+
   pub fn format_output(&self, mut format: String, values: Vec<Format>) -> String {
     for val in values {
       format = format.replace(val.get_placeholder(), &val.inner(self.config.clone()));
@@ -370,6 +392,33 @@ impl<'a> CliApp<'a> {
             .net
             .handle_network_event(IoEvent::ToggleSaveTrack(id))
             .await;
+        }
+      }
+      Flag::SaveAlbum(s) => {
+        // Get the id of the current song
+        let ctxt = match c.item {
+            Some(i) => Ok(i),
+            None => Err(anyhow!("no item playing"))
+        }?;
+        match ctxt {
+          PlayingItem::Track(t) => {
+            let album_id = t.album.id.ok_or_else(|| anyhow!("the album has no id"))?;
+            // Same as for Flag::Like
+            if s && !self.is_a_saved_album(&album_id).await {
+                self.net.handle_network_event(IoEvent::CurrentUserSavedAlbumAdd(album_id)).await;
+            } else if !s && self.is_a_saved_album(&album_id).await {
+                self.net.handle_network_event(IoEvent::CurrentUserSavedAlbumDelete(album_id)).await;
+            }
+          },
+          PlayingItem::Episode(e) => {
+            let show_id = e.show.id;
+            // Same as for Flag::Like
+            if s && !self.is_a_saved_show(&show_id).await {
+                self.net.handle_network_event(IoEvent::CurrentUserSavedShowAdd(show_id)).await;
+            } else if !s && self.is_a_saved_show(&show_id).await {
+                self.net.handle_network_event(IoEvent::CurrentUserSavedShowDelete(show_id)).await;
+            }
+          }
         }
       }
       Flag::Shuffle => {
